@@ -35,17 +35,26 @@ public class Document {
         Status = DocumentStatus.Sent;
     }
 
-    public void Sign(string phoneNumber)
+    public void Sign(string phoneNumber, string salt, Guid userId)
     {
-        if (string.IsNullOrEmpty(phoneNumber)) throw new ArgumentNullException("Телефон не может быть пуст");
+        if (string.IsNullOrEmpty(phoneNumber)) throw new ArgumentNullException(nameof(phoneNumber));
+        if (string.IsNullOrEmpty(salt)) throw new ArgumentNullException(nameof(salt));
+        if(userId == Guid.Empty) throw new ArgumentNullException("User ID cannot be empty", nameof(userId));
+
         string clean = PhoneHelper.NormalizePhone(phoneNumber);
         if (!PhoneHelper.IsValidPhone(clean))
-            throw new ArgumentException($"Номер телефона {phoneNumber} невалиден после нормализации");
+            throw new ArgumentException($"Invalid phone number: {phoneNumber}");
         if (Status != DocumentStatus.Sent)
-            throw new InvalidOperationException($"Документ '{Title}' не в статусе 'Sent' (текущий: {Status})");
-        if (_signatures.Any(s => s.Phone == clean)) 
-            throw new InvalidOperationException($"Телефон {clean} уже подписал этот документ");
-        _signatures.Add(new Signature(clean));
+            throw new InvalidOperationException($"Document '{Title}' is not in 'Sent' status (current: {Status})");
+        
+        string hash = HashHelper.Hashing(clean, salt);
+
+        if (_signatures.Any(s => s.Hash == hash)) 
+            throw new InvalidOperationException($"User with phone {phoneNumber} has already signed this document");
+        
+        _signatures.Add(new Signature(userId, hash));
         Status = DocumentStatus.Signed;
+
+        //Вызыв события???
     } 
 }

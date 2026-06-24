@@ -48,6 +48,6 @@ public class InMemoryDocumentRepository : IDocumentRepository {
     {
         var employee = _storageEmployee.Find(doc => doc.Id == employeeId);
         if (employee == null) throw new InvalidOperationException("Employee not found");
-        return Task.FromResult(_storage.Where(d => d.Signatures.Any(s => s.Phone == employee.Phone)).AsEnumerable());
+        return Task.FromResult(_storage.Where(d => d.Signatures.Any(s => s.UserId == employee.Id)).AsEnumerable());
     }
 }

@@ -160,7 +160,7 @@ public class DocumentsController(IDocumentRepository documentRepository, SendDoc
         response.Id = document.Id;
         response.Title = document.Title;
         response.Status = document.Status.ToString();
-        response.Signatures = document.Signatures.Select(s => new SignatureDto { Phone = s.Phone, SignedAt = s.SignedAt }).ToList();
+        response.Signatures = document.Signatures.Select(s => new SignatureDto { UserId = s.UserId, Hash = s.Hash, SignedAt = s.SignedAt }).ToList();
         return response;
     }
 }

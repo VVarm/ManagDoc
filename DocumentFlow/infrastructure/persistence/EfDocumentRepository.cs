@@ -50,6 +50,6 @@ public class EfDocumentRepository : IDocumentRepository
     {
         var employee = await _context.Employees.FindAsync(employeeId);
         if (employee == null) return Enumerable.Empty<Document>();
-        return await _context.Documents.Where(d => d.Signatures.Any(s => s.Phone == employee.Phone)).ToListAsync();
+        return await _context.Documents.Where(d => d.Signatures.Any(s => s.UserId == employee.Id)).ToListAsync();
     }
 }

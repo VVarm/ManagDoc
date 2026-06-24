@@ -1,5 +1,6 @@
 public class SignatureDto
 {
-    public string? Phone { get; set; }
+    public Guid? UserId { get; set; }
+    public string? Hash { get; set; }
     public DateTime? SignedAt { get; set; }
 }
