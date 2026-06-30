@@ -3,9 +3,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation.AspNetCore;
 using Scalar.AspNetCore;
+using Microsoft.OpenApi;
 using FluentValidation;
 using System.Text;
 using Serilog;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,8 @@ builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 
+var secretKey = builder.Configuration["JwtSettings:SecretKey"] 
+    ?? throw new InvalidOperationException("JwtSettings:SecretKey is not configured");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -50,6 +54,16 @@ builder.Services.AddOpenApi(options =>
                 document.Info.Description = string.Join("\n", members.Select(n => n.InnerText));
             }
         }
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Enter your JWT token"
+        });
+
         return Task.CompletedTask;
     });
 });

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class OrganizationsController(IOrganizationRepository organizationRepository, IEmployeeRepository employeeRepository, TransferEmployeeHandler transferEmployeeHandler, ILogger<OrganizationsController> logger) : ControllerBase

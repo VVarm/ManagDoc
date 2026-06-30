@@ -1,5 +1,5 @@
 public class User {
-    public Guid Id { get; }
+    public Guid Id { get; private set; }
     public string Phone { get; private set; }
     public string PasswordHash { get; private set; }
     public UserRole Role { get; private set; }

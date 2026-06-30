@@ -24,14 +24,24 @@ public class JwtService : IJwtService
             new Claim(ClaimTypes.Role, role.ToString())
         };
 
-        if (_configuration["JwtSettings:SecretKey"].ToString().Length < 32)
+        string secretKey = _configuration.GetValue<string>("JwtSettings:SecretKey");
+        if (string.IsNullOrEmpty(secretKey))
+            throw new ArgumentException("SecretKey is null");
+        if (secretKey.Length < 32)
             throw new ArgumentException("Secret key must be at least 32 characters long.");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]));
+        var issuer = _configuration["JwtSettings:Issuer"];
+        if (string.IsNullOrEmpty(issuer))
+            throw new ArgumentException("Issuer is null");
+        var audience = _configuration["JwtSettings:Audience"];
+        if (string.IsNullOrEmpty(audience))
+            throw new ArgumentException("Audience is null");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        double expiryMinutes = _configuration.GetValue<double?>("JwtSettings:AccessTokenExpiryMinutes") ?? 15;
         JwtSecurityToken token = new JwtSecurityTokenHandler().CreateJwtSecurityToken(
-            issuer: _configuration["JwtSettings:Issuer"],
-            audience: _configuration["JwtSettings:Audience"],
+            issuer: issuer,
+            audience: audience,
             subject: new ClaimsIdentity(claims),
-            expires: DateTime.UtcNow.AddMinutes(double.Parse(_configuration["JwtSettings:AccessTokenExpiryMinutes"])),
+            expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -44,15 +54,26 @@ public class JwtService : IJwtService
     
     public ClaimsPrincipal GetClaimsPrincipalFromExpiredToken(string token)
     {
+        string secretKey = _configuration.GetValue<string>("JwtSettings:SecretKey");
+        if (string.IsNullOrEmpty(secretKey))
+            throw new ArgumentException("SecretKey is null");
+        if (secretKey.Length < 32)
+            throw new ArgumentException("Secret key must be at least 32 characters long.");
+        var issuer = _configuration["JwtSettings:Issuer"];
+        if (string.IsNullOrEmpty(issuer))
+            throw new ArgumentException("Issuer is null");
+        var audience = _configuration["JwtSettings:Audience"];
+        if (string.IsNullOrEmpty(audience))
+            throw new ArgumentException("Audience is null");
         TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = false,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = _configuration["JwtSettings:Issuer"],
-            ValidAudience = _configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]))
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
         return new JwtSecurityTokenHandler().ValidateToken(token, tokenValidationParameters, out _);
     }
